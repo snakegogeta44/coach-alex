@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Coach Alex">
+<meta name="theme-color" content="#0d0d0d">
+<title>Coach Alex</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif}
+html,body{height:100%;background:#0d0d0d;color:#e5e7eb;overscroll-behavior:none}
+#app{height:100dvh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;overflow:hidden}
+input,button{font-family:inherit;outline:none}
+input{color:#e5e7eb;background:rgba(255,255,255,.06);border:1px solid #272727;border-radius:12px;padding:12px 14px;font-size:16px;width:100%;color-scheme:dark}
+input::placeholder{color:#4b5563}
+button{cursor:pointer;border:none;border-radius:12px;font-weight:600}
+.screen{display:none;flex:1;flex-direction:column;overflow:hidden}
+.screen.active{display:flex}
+.scroll{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding:14px}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.dot{width:7px;height:7px;border-radius:50%;background:#f97316}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══ ÉCRAN CLÉ API ═══ -->
+  <div id="keyScreen" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;background:#0d0d0d">
+    <div style="font-size:64px;margin-bottom:16px">💪</div>
+    <div style="font-weight:800;font-size:26px;margin-bottom:8px">Coach Alex</div>
+    <div style="color:#9ca3af;font-size:14px;text-align:center;margin-bottom:32px;line-height:1.8">Entre ta clé API Anthropic<br>pour activer ton coach IA</div>
+    <div style="width:100%;max-width:340px">
+      <div style="font-size:12px;color:#6b7280;margin-bottom:6px">Clé API Anthropic</div>
+      <input id="keyInput" type="password" placeholder="sk-ant-api03-..." style="margin-bottom:12px">
+      <button onclick="saveKey()" style="width:100%;padding:14px;background:linear-gradient(135deg,#f97316,#ef4444);color:white;font-size:16px;margin-bottom:16px">
+        Démarrer 🚀
+      </button>
+      <div style="font-size:12px;color:#4b5563;text-align:center;line-height:1.8">
+        Obtiens ta clé sur <a href="https://console.anthropic.com" target="_blank" style="color:#f97316;text-decoration:none">console.anthropic.com</a><br>
+        🔒 Stockée uniquement sur ton appareil
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ APP PRINCIPALE ═══ -->
+  <div id="mainApp" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+
+    <!-- Header -->
+    <div style="background:#181818;border-bottom:1px solid #272727;padding:12px 16px;display:flex;align-items:center;gap:10;flex-shrink:0;padding-top:max(12px, env(safe-area-inset-top))">
+      <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ef4444);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">💪</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:16px">Coach Alex</div>
+        <div id="headerSub" style="font-size:11px;color:#f97316">Poids du Corps</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div style="background:#181818;border-bottom:1px solid #272727;display:flex;flex-shrink:0">
+      <button onclick="switchTab('chat')" id="tabChat" style="flex:1;padding:11px 0;background:none;border-bottom:2px solid #f97316;color:#f97316;font-size:13px">💬 Chat</button>
+      <button onclick="switchTab('journal')" id="tabJournal" style="flex:1;padding:11px 0;background:none;border-bottom:2px solid transparent;color:#6b7280;font-size:13px">📓 Journal</button>
+      <button onclick="switchTab('profile')" id="tabProfile" style="flex:1;padding:11px 0;background:none;border-bottom:2px solid transparent;color:#6b7280;font-size:13px">⚙️ Profil</button>
+    </div>
+
+    <!-- ─── CHAT ─── -->
+    <div id="chatScreen" class="screen active" style="flex-direction:column">
+      <div id="messages" class="scroll" style="padding-bottom:8px">
+        <!-- Messages injectés par JS -->
+      </div>
+      <!-- Suggestions -->
+      <div style="padding:6px 12px;display:flex;gap:6px;overflow-x:auto;flex-shrink:0">
+        <button onclick="quickSend('Programme débutant')" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);border-radius:20px;padding:5px 11px;color:#fb923c;font-size:12px;white-space:nowrap;font-weight:400">Programme débutant</button>
+        <button onclick="quickSend('Exercice dos')" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);border-radius:20px;padding:5px 11px;color:#fb923c;font-size:12px;white-space:nowrap;font-weight:400">Exercice dos</button>
+        <button onclick="quickSend('Variantes pompes')" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);border-radius:20px;padding:5px 11px;color:#fb923c;font-size:12px;white-space:nowrap;font-weight:400">Variantes pompes</button>
+        <button onclick="quickSend('Séance 20 min')" style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);border-radius:20px;padding:5px 11px;color:#fb923c;font-size:12px;white-space:nowrap;font-weight:400">Séance 20 min</button>
+      </div>
+      <!-- Input -->
+      <div style="padding:10px 12px;background:#181818;border-top:1px solid #272727;display:flex;gap:8px;flex-shrink:0;padding-bottom:max(12px,env(safe-area-inset-bottom))">
+        <input id="chatInput" placeholder="Pose une question à Coach Alex..." onkeydown="if(event.key==='Enter')sendMsg()">
+        <button id="sendBtn" onclick="sendMsg()" style="background:linear-gradient(135deg,#f97316,#ef4444);padding:12px 15px;color:white;font-size:16px;flex-shrink:0;border-radius:12px">➤</button>
+      </div>
+    </div>
+
+    <!-- ─── JOURNAL ─── -->
+    <div id="journalScreen" class="screen" style="flex-direction:column">
+      <div class="scroll">
+        <button onclick="toggleForm()" id="addBtn" style="width:100%;padding:13px;background:linear-gradient(135deg,#f97316,#ef4444);color:white;font-size:15px;margin-bottom:12px">+ Ajouter une séance</button>
+
+        <!-- Formulaire ajout -->
+        <div id="entryForm" style="display:none;background:#181818;border:1px solid #272727;border-radius:14px;padding:14px;margin-bottom:14px">
+          <div style="font-weight:700;color:#f97316;margin-bottom:12px">📝 Nouvelle séance</div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px">Date</div>
+            <input type="date" id="fDate">
+          </div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px">Exercice</div>
+            <input type="text" id="fExercise" placeholder="ex: Pompes, Tractions, Squats...">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+            <div>
+              <div style="font-size:12px;color:#6b7280;margin-bottom:4px">Séries</div>
+              <input type="number" id="fSets" value="3" style="text-align:center">
+            </div>
+            <div>
+              <div style="font-size:12px;color:#6b7280;margin-bottom:4px">Reps</div>
+              <input type="number" id="fReps" value="10" style="text-align:center">
+            </div>
+            <div>
+              <div style="font-size:12px;color:#6b7280;margin-bottom:4px">Repos (s)</div>
+              <input type="number" id="fRest" value="60" style="text-align:center">
+            </div>
+          </div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px">Notes</div>
+            <input type="text" id="fNotes" placeholder="Ressenti, progression...">
+          </div>
+          <button onclick="addEntry()" style="width:100%;padding:13px;background:linear-gradient(135deg,#f97316,#ef4444);color:white;font-size:15px">✓ Enregistrer</button>
+        </div>
+
+        <div id="journalList"></div>
+      </div>
+    </div>
+
+    <!-- ─── PROFIL ─── -->
+    <div id="profileScreen" class="screen" style="flex-direction:column">
+      <div class="scroll">
+        <!-- Niveau -->
+        <div style="background:#181818;border:1px solid #272727;border-radius:14px;padding:16px;margin-bottom:12px">
+          <div style="font-weight:700;color:#f97316;margin-bottom:14px;font-size:15px">🏷️ Mon Niveau</div>
+          <div style="display:flex;gap:8px" id="levelBtns"></div>
+        </div>
+        <!-- Objectif -->
+        <div style="background:#181818;border:1px solid #272727;border-radius:14px;padding:16px;margin-bottom:12px">
+          <div style="font-weight:700;color:#f97316;margin-bottom:14px;font-size:15px">🎯 Mon Objectif</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="goalBtns"></div>
+        </div>
+        <!-- Stats -->
+        <div style="background:#181818;border:1px solid #272727;border-radius:14px;padding:16px;margin-bottom:12px">
+          <div style="font-weight:700;color:#f97316;margin-bottom:12px;font-size:15px">📊 Mes Stats</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="statsGrid"></div>
+        </div>
+        <!-- Clé -->
+        <div style="background:#181818;border:1px solid #272727;border-radius:14px;padding:16px">
+          <div style="font-weight:700;color:#f97316;margin-bottom:12px;font-size:15px">🔑 Clé API</div>
+          <button onclick="changeKey()" style="width:100%;padding:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:#ef4444;font-size:14px">Changer la clé API</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- fin mainApp -->
+</div>
+
+<script>
+// ── État global ──────────────────────────────────────────
+var apiKey = localStorage.getItem('ca_key') || '';
+var level  = localStorage.getItem('ca_level') || 'Débutant';
+var goal   = localStorage.getItem('ca_goal')  || 'Force';
+var journal = [];
+try { journal = JSON.parse(localStorage.getItem('ca_journal') || '[]'); } catch(e) {}
+var chatHistory = [];
+var LEVELS = ['Débutant','Intermédiaire','Avancé'];
+var GOALS  = ['Force','Endurance','Prise de masse','Perte de poids'];
+var exEmoji = {pompes:'💪',tractions:'🏋️',dips:'💪',squats:'🦵',burpees:'🔥',gainage:'🧱',fentes:'🦵',planche:'🧱',abdos:'🔥'};
+
+function getEmoji(n) {
+  n = n.toLowerCase();
+  var k = Object.keys(exEmoji).find(function(k){ return n.indexOf(k) !== -1; });
+  return k ? exEmoji[k] : '🏃';
+}
+
+// ── Init ─────────────────────────────────────────────────
+window.onload = function() {
+  if (apiKey) {
+    showApp();
+  }
+  // Date par défaut formulaire
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('fDate').value = today;
+};
+
+function saveKey() {
+  var k = document.getElementById('keyInput').value.trim();
+  if (!k) return alert('Entre ta clé API !');
+  apiKey = k;
+  localStorage.setItem('ca_key', k);
+  showApp();
+}
+
+function showApp() {
+  document.getElementById('keyScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'flex';
+  updateHeader();
+  renderLevelBtns();
+  renderGoalBtns();
+  renderStats();
+  renderJournal();
+  addBotMsg("Salut champion ! 👊 Je suis **Coach Alex**, ton expert en exercices au **poids du corps**.\n\nPompes, tractions, dips, squats, gainage... on va tout déchirer ! 🔥\n\nDemande-moi un exercice, un programme ou un conseil !");
+}
+
+function changeKey() {
+  if (confirm('Changer de clé API ?')) {
+    localStorage.removeItem('ca_key');
+    apiKey = '';
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('keyScreen').style.display = 'flex';
+    document.getElementById('keyInput').value = '';
+  }
+}
+
+// ── Tabs ─────────────────────────────────────────────────
+function switchTab(name) {
+  ['chat','journal','profile'].forEach(function(t) {
+    document.getElementById(t+'Screen').classList.toggle('active', t === name);
+    var btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+    btn.style.borderBottomColor = t === name ? '#f97316' : 'transparent';
+    btn.style.color = t === name ? '#f97316' : '#6b7280';
+  });
+  if (name === 'profile') { renderStats(); }
+  if (name === 'journal') { renderJournal(); }
+}
+
+// ── Chat ─────────────────────────────────────────────────
+function addBotMsg(text) {
+  chatHistory.push({ role:'assistant', content:text });
+  renderMessages();
+}
+
+function renderMessages() {
+  var box = document.getElementById('messages');
+  box.innerHTML = chatHistory.map(function(m) {
+    return m.role === 'user' ? renderUserBubble(m.content) : renderBotBubble(m.content);
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+function renderUserBubble(text) {
+  return '<div style="display:flex;justify-content:flex-end;margin-bottom:14px;animation:fadeIn .2s ease">'
+    + '<div style="max-width:78%;background:linear-gradient(135deg,#f97316,#ef4444);border-radius:16px 16px 4px 16px;padding:10px 13px;color:white;font-size:14px;line-height:1.6">'
+    + escHtml(text) + '</div></div>';
+}
+
+function renderBotBubble(text) {
+  var html = parseContent(text);
+  return '<div style="display:flex;justify-content:flex-start;margin-bottom:14px;align-items:flex-end;animation:fadeIn .2s ease">'
+    + '<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ef4444);display:flex;align-items:center;justify-content:center;font-size:17px;margin-right:8px;flex-shrink:0">💪</div>'
+    + '<div style="max-width:78%;background:rgba(255,255,255,.07);border-radius:16px 16px 16px 4px;padding:10px 13px;color:#e5e7eb;font-size:14px;line-height:1.6">'
+    + html + '</div></div>';
+}
+
+function parseContent(text) {
+  // Remplace [VIDEO:xxx] par un lien YouTube
+  text = text.replace(/\[VIDEO:([^\]]+)\]/g, function(_, ex) {
+    var url = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(ex + ' exercice technique tutoriel français');
+    return '<div style="background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.35);border-radius:12px;padding:10px 14px;margin:8px 0;display:flex;align-items:center;gap:10px">'
+      + '<span style="font-size:20px">' + getEmoji(ex) + '</span>'
+      + '<div style="flex:1"><div style="color:#f97316;font-weight:700;font-size:13px;text-transform:capitalize">' + escHtml(ex) + '</div>'
+      + '<div style="color:#9ca3af;font-size:11px">Voir la démonstration</div></div>'
+      + '<a href="' + url + '" target="_blank" style="background:#dc2626;color:white;padding:7px 12px;border-radius:8px;text-decoration:none;font-size:12px;font-weight:700;flex-shrink:0">▶ YouTube</a></div>';
+  });
+  // Markdown basique
+  var lines = text.split('\n');
+  return lines.map(function(line) {
+    if (line.startsWith('## '))  return '<div style="font-weight:700;color:#fb923c;margin-top:8px;margin-bottom:2px;font-size:15px">' + mdInline(line.slice(3)) + '</div>';
+    if (line.startsWith('### ')) return '<div style="font-weight:700;color:#f97316;margin-top:6px;margin-bottom:2px;font-size:14px">' + mdInline(line.slice(4)) + '</div>';
+    if (line.startsWith('- ') || line.startsWith('• ')) return '<div style="padding-left:12px;margin-bottom:3px">• ' + mdInline(line.slice(2)) + '</div>';
+    if (!line.trim()) return '<div style="height:5px"></div>';
+    return '<div style="margin-bottom:2px">' + mdInline(line) + '</div>';
+  }).join('');
+}
+
+function mdInline(t) {
+  return t.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#fb923c">$1</strong>');
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function quickSend(text) {
+  document.getElementById('chatInput').value = text;
+  sendMsg();
+}
+
+async function sendMsg() {
+  var input = document.getElementById('chatInput');
+  var text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  chatHistory.push({ role:'user', content:text });
+  renderMessages();
+
+  // Indicateur chargement
+  var loadId = 'load_' + Date.now();
+  var box = document.getElementById('messages');
+  box.innerHTML += '<div id="' + loadId + '" style="display:flex;align-items:center;gap:8px;margin-bottom:14px">'
+    + '<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#f97316,#ef4444);display:flex;align-items:center;justify-content:center;font-size:17px">💪</div>'
+    + '<div style="background:rgba(255,255,255,.07);border-radius:16px 16px 16px 4px;padding:12px 16px;display:flex;gap:5px">'
+    + '<div class="dot" style="animation:bounce .9s 0s infinite"></div>'
+    + '<div class="dot" style="animation:bounce .9s .18s infinite"></div>'
+    + '<div class="dot" style="animation:bounce .9s .36s infinite"></div>'
+    + '</div></div>';
+  box.scrollTop = box.scrollHeight;
+
+  var sysPrompt = 'Tu es Coach Alex, coach sportif expert et motivant, spécialisé en exercices au poids du corps. Tu parles toujours en français.\n'
+    + 'Spécialités : pompes (standard, diamant, archer, inclinées, déclinées), tractions (pronation, supination, australiennes), dips, squats, fentes bulgares, planche, gainage, mountain climbers, burpees, abdos.\n'
+    + 'Profil : Niveau ' + level + ' | Objectif : ' + goal + '.\n'
+    + 'Règles : quand tu présentes un exercice à montrer, insère [VIDEO:nom_exercice]. Utilise **gras** et ## pour les sections. Structure tes réponses : 🎯 Muscles ciblés | 📐 Technique | 🔢 Séries/Reps | 💡 Variantes. Sois motivant et précis.';
+
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: sysPrompt,
+        messages: chatHistory.map(function(m){ return {role:m.role, content:m.content}; })
+      })
+    });
+    var data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    var reply = (data.content || []).map(function(b){ return b.text || ''; }).join('');
+    chatHistory.push({ role:'assistant', content:reply });
+  } catch(e) {
+    chatHistory.push({ role:'assistant', content:'⚠️ Erreur : ' + e.message + '\n\nVérifie ta clé API dans Profil.' });
+  }
+
+  var loadEl = document.getElementById(loadId);
+  if (loadEl) loadEl.remove();
+  renderMessages();
+}
+
+// ── Journal ───────────────────────────────────────────────
+function toggleForm() {
+  var form = document.getElementById('entryForm');
+  var btn  = document.getElementById('addBtn');
+  var open = form.style.display === 'none';
+  form.style.display = open ? 'block' : 'none';
+  btn.textContent = open ? '✕ Annuler' : '+ Ajouter une séance';
+}
+
+function addEntry() {
+  var ex = document.getElementById('fExercise').value.trim();
+  if (!ex) return alert('Entre le nom de l\'exercice !');
+  var entry = {
+    id: Date.now(),
+    date: document.getElementById('fDate').value,
+    exercise: ex,
+    sets: document.getElementById('fSets').value,
+    reps: document.getElementById('fReps').value,
+    rest: document.getElementById('fRest').value,
+    notes: document.getElementById('fNotes').value
+  };
+  journal.unshift(entry);
+  localStorage.setItem('ca_journal', JSON.stringify(journal));
+  document.getElementById('fExercise').value = '';
+  document.getElementById('fNotes').value = '';
+  document.getElementById('fSets').value = '3';
+  document.getElementById('fReps').value = '10';
+  document.getElementById('fRest').value = '60';
+  toggleForm();
+  renderJournal();
+  renderStats();
+}
+
+function deleteEntry(id) {
+  journal = journal.filter(function(e){ return e.id !== id; });
+  localStorage.setItem('ca_journal', JSON.stringify(journal));
+  renderJournal();
+  renderStats();
+}
+
+function renderJournal() {
+  var list = document.getElementById('journalList');
+  if (!list) return;
+  if (journal.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:#6b7280;padding:50px 0"><div style="font-size:48px;margin-bottom:12px">📓</div><div style="font-weight:600;margin-bottom:6px">Aucune séance encore</div><div style="font-size:13px">Commence à logger tes entraînements !</div></div>';
+    return;
+  }
+  list.innerHTML = journal.map(function(e) {
+    var dateStr = '';
+    try { dateStr = new Date(e.date + 'T12:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}); } catch(err) { dateStr = e.date; }
+    return '<div style="background:#181818;border:1px solid #272727;border-radius:14px;padding:13px;margin-bottom:10px;animation:fadeIn .2s ease">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+      + '<div style="font-weight:700;font-size:15px">' + getEmoji(e.exercise) + ' ' + escHtml(e.exercise) + '</div>'
+      + '<div style="display:flex;gap:8px;align-items:center">'
+      + '<div style="font-size:12px;color:#6b7280">' + dateStr + '</div>'
+      + '<button onclick="deleteEntry(' + e.id + ')" style="background:none;border:none;color:#ef4444;font-size:16px;padding:0;cursor:pointer;font-weight:400">🗑</button>'
+      + '</div></div>'
+      + '<div style="display:flex;gap:6px">'
+      + statChip('🔁', e.sets, 'Séries')
+      + statChip('⚡', e.reps, 'Reps')
+      + statChip('⏱', e.rest + 's', 'Repos')
+      + '</div>'
+      + (e.notes ? '<div style="margin-top:8px;font-size:12px;color:#6b7280;font-style:italic">💬 ' + escHtml(e.notes) + '</div>' : '')
+      + '</div>';
+  }).join('');
+}
+
+function statChip(ic, v, l) {
+  return '<div style="flex:1;background:rgba(249,115,22,.09);border-radius:8px;padding:7px 4px;text-align:center">'
+    + '<div style="font-size:12px">' + ic + '</div>'
+    + '<div style="font-weight:700;color:#f97316;font-size:15px">' + v + '</div>'
+    + '<div style="font-size:10px;color:#6b7280">' + l + '</div>'
+    + '</div>';
+}
+
+// ── Profil ───────────────────────────────────────────────
+function renderLevelBtns() {
+  document.getElementById('levelBtns').innerHTML = LEVELS.map(function(l) {
+    var active = l === level;
+    return '<button onclick="setLevel(\'' + l + '\')" style="flex:1;padding:10px 4px;border-radius:9px;border:1.5px solid ' + (active?'#f97316':'#272727') + ';background:' + (active?'rgba(249,115,22,.14)':'rgba(255,255,255,.03)') + ';color:' + (active?'#f97316':'#6b7280') + ';font-size:12px;font-weight:' + (active?'700':'400') + '">' + l + '</button>';
+  }).join('');
+}
+
+function renderGoalBtns() {
+  document.getElementById('goalBtns').innerHTML = GOALS.map(function(g) {
+    var active = g === goal;
+    return '<button onclick="setGoal(\'' + g + '\')" style="padding:12px 6px;border-radius:9px;border:1.5px solid ' + (active?'#f97316':'#272727') + ';background:' + (active?'rgba(249,115,22,.14)':'rgba(255,255,255,.03)') + ';color:' + (active?'#f97316':'#6b7280') + ';font-size:13px;font-weight:' + (active?'700':'400') + '">' + g + '</button>';
+  }).join('');
+}
+
+function setLevel(l) { level = l; localStorage.setItem('ca_level', l); updateHeader(); renderLevelBtns(); }
+function setGoal(g)  { goal  = g; localStorage.setItem('ca_goal',  g); updateHeader(); renderGoalBtns(); }
+function updateHeader() { document.getElementById('headerSub').textContent = 'Poids du Corps · ' + level + ' · ' + goal; }
+
+function renderStats() {
+  var totalSeries = journal.reduce(function(s,e){ return s + Number(e.sets||0); }, 0);
+  var totalReps   = journal.reduce(function(s,e){ return s + Number(e.sets||0)*Number(e.reps||0); }, 0);
+  var userMsgs    = chatHistory.filter(function(m){ return m.role === 'user'; }).length;
+  var stats = [
+    ['🏋️', journal.length, 'Séances\nloggées'],
+    ['💬', userMsgs,      'Questions\nposées'],
+    ['⚡', totalSeries,   'Total\nséries'],
+    ['🔥', totalReps,     'Total\nreps']
+  ];
+  document.getElementById('statsGrid').innerHTML = stats.map(function(s) {
+    return '<div style="background:rgba(249,115,22,.07);border-radius:10px;padding:12px;text-align:center">'
+      + '<div style="font-size:26px">' + s[0] + '</div>'
+      + '<div style="font-weight:800;font-size:22px;color:#f97316">' + s[1] + '</div>'
+      + '<div style="font-size:11px;color:#6b7280;white-space:pre-line;line-height:1.35">' + s[2] + '</div>'
+      + '</div>';
+  }).join('');
+}
+</script>
+</body>
+</html>
